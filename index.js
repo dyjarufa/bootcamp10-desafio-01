@@ -4,6 +4,25 @@ const server = express();
 
 server.use(express.json());
 
+server.use(countCallRequest);
+
+function countCallRequest(req, res, next) {
+    console.log(`Método: ${req.method}; URL: ${req.url}`);
+    return next();
+}
+
+function checkIfProjetExists(req, res, next) {
+    const { id } = req.params;
+    const idProject = projects.find(p => p.id == id);
+
+    if (!idProject) {
+        return res.status(401).json({ error: 'Project not found' })
+    }
+
+    return next();
+}
+
+
 const projects = [];
 
 server.get('/projects', (req, res) => {
@@ -23,7 +42,7 @@ server.post('/projects', (req, res) => {
     return res.json(project);
 })
 
-server.put('/projects/:id', (req, res) => {
+server.put('/projects/:id', checkIfProjetExists, (req, res) => {
     const { id } = req.params
     const { title } = req.body
     const project = projects.find(pro => pro.id == id)
@@ -32,7 +51,7 @@ server.put('/projects/:id', (req, res) => {
     return res.json(project);
 })
 
-server.delete('/projects/:id', (req, res) => {
+server.delete('/projects/:id', checkIfProjetExists, (req, res) => {
     const { id } = req.params
     const index = projects.findIndex(p => p.id == id)
     projects.splice(index, 1);
@@ -40,7 +59,7 @@ server.delete('/projects/:id', (req, res) => {
     return res.json(projects);
 })
 
-server.post('/projects/:id/tasks', (req, res) => {
+server.post('/projects/:id/tasks', checkIfProjetExists, (req, res) => {
     const { id } = req.params
     const { title } = req.body
 
